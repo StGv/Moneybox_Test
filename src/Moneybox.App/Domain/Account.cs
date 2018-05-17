@@ -6,6 +6,8 @@ namespace Moneybox.App
     public class Account
     {
         public const decimal PayInLimit = 4000m;
+        public const decimal NotificationLimit = 500m;
+
         private readonly INotificationService _notificationService;
 
         private decimal _balance;
@@ -25,14 +27,14 @@ namespace Moneybox.App
         public decimal Balance
         {
             get { return _balance; }
-            set
+            protected set
             {
                 if (value < 0m)
                 {
                     throw new InvalidOperationException("Insufficient funds to make transfer");
                 }
 
-                if (value < 500m)
+                if (value < NotificationLimit)
                 {
                     _notificationService.NotifyFundsLow(this.User.Email);
                 }
@@ -44,14 +46,14 @@ namespace Moneybox.App
         public decimal PaidIn
         {
             get { return _paidIn; }
-            set
+            protected set
             {
                 if (value > PayInLimit)
                 {
                     throw new InvalidOperationException("Account pay in limit reached");
                 }
 
-                if (PayInLimit - value < 500m)
+                if (PayInLimit - value < NotificationLimit)
                 {
                     _notificationService.NotifyApproachingPayInLimit(this.User.Email);
                 }
@@ -64,14 +66,15 @@ namespace Moneybox.App
         {
             Balance = Balance - amount;
             Withdrawn = Withdrawn - amount;
+
             return Balance;
         }
 
         public decimal PayIn(decimal amount)
         {
-            Balance = Balance + amount;
             PaidIn = PaidIn + amount;
-
+            Balance = Balance + amount;
+       
             return Balance;
         }
 
